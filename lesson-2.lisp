@@ -114,11 +114,21 @@
 
 (let ((ctx (initialize-context)))
   (with-harness (window surface
-                        :after ((free-context ctx))
                         :events
                         ((:scancode-r (progn (free-context ctx) (setf ctx (initialize-context))))
                          (:scancode-t (setf (gethash :toggle ctx) (not (gethash :toggle ctx))))))
-                        (handle ctx window surface)))
+                        (handle ctx window surface))
+  (free-context ctx))
+
+(defun free-it (item)
+  (typecase item
+    (sdl2-ffi:sdl-surface (format t "Freeing a ~(~A~)" (type-of item)) (sdl2:free-surface item))
+    (sdl2-ffi:sdl-rect (format t "Freeing a ~(~A~)" (type-of item)) (sdl2:free-rect item))
+    (sdl2-ffi:sdl-point (format t "Freeing a ~(~A~)" (type-of item)) (sdl2:free-point item))
+    (t (format t "not going to free a ~(~A~)" (type-of item)))))
+
+
+
 
 ;; how do I draw an image?
 
