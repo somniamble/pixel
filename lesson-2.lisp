@@ -29,6 +29,7 @@
 ;; Include an event-loop handler that will let us exit safely
 (defmacro with-harness ((window surface &key (name "PIXEL")
                                              (events '())
+                                             (after '())
                                              (width *screen-width*) 
                                              (height *screen-height*)) &body body)
   `(sdl2:with-init (:video)
@@ -47,7 +48,8 @@
               (:scancode-escape (sdl2:push-event :quit))
               ,@events
               (t :default)))
-           (:idle () ,@body))))))
+           (:idle () ,@body))
+         ,@after))))
 
 
  ; (sdl2:with-event-loop (:method :poll)
@@ -90,6 +92,10 @@
           (sdl2-image:load-image "images/selfv3.png"))
     table))
 
+(defun free-context (ctx)
+  (sdl2:free-surface (get-ctx :self-image ctx))
+  (sdl2:free-surface (get-ctx :self-image-v3 ctx)))
+
 (with-window-surface (my-window my-surface)
   (let ((ctx (initialize-context)))
   (sdl2:show-window my-window)
@@ -107,8 +113,10 @@
        
 
 (let ((ctx (initialize-context)))
-  (with-harness (window surface :events 
-                        ((:scancode-r (setf ctx (initialize-context)))
+  (with-harness (window surface
+                        :after ((free-context ctx))
+                        :events
+                        ((:scancode-r (progn (free-context ctx) (setf ctx (initialize-context))))
                          (:scancode-t (setf (gethash :toggle ctx) (not (gethash :toggle ctx))))))
                         (handle ctx window surface)))
 
