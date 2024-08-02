@@ -1,0 +1,11 @@
+image: alpine/edge
+secrets:
+  - a9fd4315-9f42-42d3-b747-3bdfca113eec
+sources:
+  - git+ssh://git@git.sr.ht/~rosin/pixel
+tasks:
+  - mirror-to-github: |
+      cd ~/pixel
+      ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      git remote add github git@github.com:somniamble/pixel.git
+      git push --mirror github
