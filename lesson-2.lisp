@@ -28,7 +28,7 @@
 
 ;; Include an event-loop handler that will let us exit safely
 (defmacro with-harness ((window surface &key (name "PIXEL")
-                                             (events '())
+                                             (keys '())
                                              (after '())
                                              (width *screen-width*) 
                                              (height *screen-height*)) &body body)
@@ -46,7 +46,7 @@
             (format t "pressing ~a" keysym)
             (case (sdl2:scancode keysym)
               (:scancode-escape (sdl2:push-event :quit))
-              ,@events
+              ,@keys
               (t :default)))
            (:idle () ,@body))
          ,@after))))
@@ -95,26 +95,11 @@
 (defun free-context (ctx)
   (sdl2:free-surface (get-ctx :self-image ctx))
   (sdl2:free-surface (get-ctx :self-image-v3 ctx)))
-
-(with-window-surface (my-window my-surface)
-  (let ((ctx (initialize-context)))
-  (sdl2:show-window my-window)
-  (sdl2:with-event-loop (:method :poll)
-    (:quit () t)
-    (:keydown (:keysym keysym)
-     (format t "pressing ~a" keysym)
-     (case (sdl2:scancode keysym)
-       (:scancode-escape (sdl2:push-event :quit))
-       (:scancode-r (setf ctx (initialize-context)))
-       (:scancode-t (setf (gethash :toggle ctx) (not (gethash :toggle ctx))))
-       (t :default)))
-    (:idle ()
-     (handle ctx my-window my-surface)))))
        
 
 (let ((ctx (initialize-context)))
   (with-harness (window surface
-                        :events
+                        :keys
                         ((:scancode-r (progn (free-context ctx) (setf ctx (initialize-context))))
                          (:scancode-t (setf (gethash :toggle ctx) (not (gethash :toggle ctx))))))
                         (handle ctx window surface))
